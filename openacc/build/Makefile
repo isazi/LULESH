@@ -6,7 +6,7 @@ LULESH_EXEC = lulesh2.0
 MPI_INC = /usr/local/include/openmpi
 MPI_LIB = /usr/local/lib
 
-SERCXX = pgCC -DUSE_MPI=0
+SERCXX = nvc++ -DUSE_MPI=0
 MPICXX = mpicxx -DUSE_MPI=1
 CXX = $(MPICXX)
 
@@ -27,7 +27,7 @@ OBJECTS2.0 = $(SOURCES2.0:.cc=.o)
 SILO_INCDIR = /usr/gapps/silo/4.8/chaos_5_x86_64_ib_pgcc/include
 SILO_LIBDIR = /usr/gapps/silo/4.8/chaos_5_x86_64_ib_pgcc/lib
 
-ACCFLAGS = -acc -ta=nvidia,cc35 -Minfo=accel
+ACCFLAGS = -acc=gpu -gpu=cc86 -Minfo=accel
 CXXFLAGS = -mp --restrict -Mautoinline -Minline=levels:20 $(ACCFLAGS) -O2 
 LDFLAGS = -mp $(ACCFLAGS) 
 
