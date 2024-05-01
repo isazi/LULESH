@@ -1162,7 +1162,7 @@ void CalcFBHourglassForceForElems( Domain &domain,
 /*************************************************/
 /*    compute the hourglass modes */
 #pragma acc kernels copyin(gamma[:4][:8])         \
-                    present(fx_elem:numElem8], \
+                    present(fx_elem[:numElem8], \
                             fy_elem[:numElem8], \
                             fz_elem[:numElem8], \
                             xd[:numNode],       \
@@ -3614,7 +3614,7 @@ void LagrangeLeapFrog(Domain& domain)
   volatile Real_t *ss = domain.ss();
   volatile Real_t *vdov = domain.vdov();
   volatile Real_t *arealg = domain.arealg();
-#pragma acc data present(ss[num:Elem], \
+#pragma acc data present(ss[:numElem], \
                          vdov[:numElem], \
                          arealg[:numElem])
 {
