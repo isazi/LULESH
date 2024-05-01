@@ -6,7 +6,7 @@ LULESH_EXEC = lulesh2.0
 MPI_INC = /usr/local/include/openmpi
 MPI_LIB = /usr/local/lib
 
-SERCXX = nvc++ -DUSE_MPI=0
+SERCXX = nvc++ -DUSE_MPI=0 -DSEDOV_SYNC_POS_VEL_LATE=1
 MPICXX = mpicxx -DUSE_MPI=1
 CXX = $(MPICXX)
 
