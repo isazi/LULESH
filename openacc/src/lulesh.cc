@@ -2877,13 +2877,24 @@ void CalcPressureForElems(Domain &domain, Real_t* p_new, Real_t* bvc,
 {
 
   volatile Index_t numElem = domain.numElem();
-#pragma acc parallel loop present(regElemList[:length], \
-                         compression[:length], \
-                         pbvc[:length], \
-                         p_new[:length], \
-                         bvc[:length], \
-                         e_old[:length], \
-                         vnewc[:numElem])
+#ifdef kernel_tuner
+#pragma acc parallel vector_length(vlength) present(regElemList[:length], \
+                                                    compression[:length], \
+                                                    pbvc[:length], \
+                                                    p_new[:length], \
+                                                    bvc[:length], \
+                                                    e_old[:length], \
+                                                    vnewc[:numElem])
+#else
+#pragma acc parallel  present(regElemList[:length], \
+                              compression[:length], \
+                              pbvc[:length], \
+                              p_new[:length], \
+                              bvc[:length], \
+                              e_old[:length], \
+                              vnewc[:numElem])
+#endif
+#pragma acc loop
   for (Index_t i = 0 ; i < length ; ++i){
     Index_t elem = regElemList[i];
 
@@ -2925,12 +2936,13 @@ void CalcEnergyForElems(Domain &domain, Real_t* p_new, Real_t* e_new, Real_t* q_
 #pragma acc data create(pHalfStep[:length])
 {
 
-#pragma acc parallel loop present(e_new[:length], \
+#pragma acc parallel present(e_new[:length], \
                                   e_old[:length], \
                                   p_old[:length], \
                                   q_old[:length], \
                                   delvc[:length], \
                                   work[:length])
+#pragma acc loop
   for (Index_t i = 0 ; i < length ; ++i) {
     e_new[i] = e_old[i] - Real_t(0.5) * delvc[i] * (p_old[i] + q_old[i])
       + Real_t(0.5) * work[i];
@@ -2943,7 +2955,7 @@ void CalcEnergyForElems(Domain &domain, Real_t* p_new, Real_t* e_new, Real_t* q_
   CalcPressureForElems(domain, pHalfStep, bvc, pbvc, e_new, compHalfStep, vnewc,
       pmin, p_cut, eosvmax, length, regElemList);
 
-#pragma acc parallel loop present(compHalfStep[:length], \
+#pragma acc parallel present(compHalfStep[:length], \
                                   pHalfStep[:length], \
                                   delvc[:length], \
                                   p_old[:length], \
@@ -2954,6 +2966,7 @@ void CalcEnergyForElems(Domain &domain, Real_t* p_new, Real_t* e_new, Real_t* q_
                                   pbvc[:length], \
                                   bvc[:length], \
                                   e_new[:length])
+#pragma acc loop
   for (Index_t i = 0 ; i < length ; ++i) {
     Real_t vhalf = Real_t(1.) / (Real_t(1.) + compHalfStep[i]) ;
 
@@ -2978,8 +2991,9 @@ void CalcEnergyForElems(Domain &domain, Real_t* p_new, Real_t* e_new, Real_t* q_
          - Real_t(4.0)*(pHalfStep[i] + q_new[i])) ;
   }
 
-#pragma acc parallel loop present(e_new[:length], \
+#pragma acc parallel present(e_new[:length], \
                                   work[:length])
+#pragma acc loop
   for (Index_t i = 0 ; i < length ; ++i) {
 
     e_new[i] += Real_t(0.5) * work[i];
@@ -2995,7 +3009,7 @@ void CalcEnergyForElems(Domain &domain, Real_t* p_new, Real_t* e_new, Real_t* q_
   CalcPressureForElems(domain, p_new, bvc, pbvc, e_new, compression, vnewc,
                        pmin, p_cut, eosvmax, length, regElemList);
 
-#pragma acc parallel loop present(regElemList[:length], \
+#pragma acc parallel present(regElemList[:length], \
                                   pHalfStep[:length], \
                                   delvc[:length], \
                                   pbvc[:length], \
@@ -3008,6 +3022,7 @@ void CalcEnergyForElems(Domain &domain, Real_t* p_new, Real_t* e_new, Real_t* q_
                                   p_new[:length], \
                                   q_new[:length], \
                                   vnewc[:numElem])
+#pragma acc loop
   for (Index_t i = 0 ; i < length ; ++i){
     const Real_t sixth = Real_t(1.0) / Real_t(6.0) ;
     Index_t elem = regElemList[i];
@@ -3044,7 +3059,7 @@ void CalcEnergyForElems(Domain &domain, Real_t* p_new, Real_t* e_new, Real_t* q_
    CalcPressureForElems(domain, p_new, bvc, pbvc, e_new, compression, vnewc,
                         pmin, p_cut, eosvmax, length, regElemList);
 
-#pragma acc parallel loop present(regElemList[:length], \
+#pragma acc parallel present(regElemList[:length], \
                                   delvc[:length], \
                                   pbvc[:length], \
                                   e_new[:length], \
@@ -3054,6 +3069,7 @@ void CalcEnergyForElems(Domain &domain, Real_t* p_new, Real_t* e_new, Real_t* q_
                                   qq_old[:length], \
                                   p_new[:length], \
                                   q_new[:length])
+#pragma acc loop
    for (Index_t i = 0 ; i < length ; ++i){
       Index_t elem = regElemList[i];
 
