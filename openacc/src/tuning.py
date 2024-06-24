@@ -69,6 +69,9 @@ args = [e_new, e_old, p_old, q_old, delvc, work]
 
 tune_params = dict()
 tune_params["vlength"] = [32 * i for i in range(1, 33)]
+metrics = dict()
+metrics["GB/s"] = lambda p: (6 * real_bytes * arguments.length / 10**9) / (p["time"] / 10**3)
+metrics["GFLOPS/s"] = lambda p: (6 * arguments.length / 10**9) / (p["time"] / 10**3)
 
 tune_kernel(
     "CalcEnergyForElems_0",
@@ -78,6 +81,7 @@ tune_kernel(
     tune_params,
     compiler_options=compiler_options,
     compiler="nvc++",
+    metrics=metrics
 )
 
 

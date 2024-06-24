@@ -2956,7 +2956,7 @@ void CalcEnergyForElems(Domain &domain, Real_t* p_new, Real_t* e_new, Real_t* q_
     e_new[i] = e_old[i] - Real_t(0.5) * delvc[i] * (p_old[i] + q_old[i])
       + Real_t(0.5) * work[i];
 
-    if (e_new[i]  < emin ) {
+    if (e_new[i] < emin ) {
       e_new[i] = emin ;
     }
   }
