@@ -2935,13 +2935,22 @@ void CalcEnergyForElems(Domain &domain, Real_t* p_new, Real_t* e_new, Real_t* q_
   volatile Index_t numElem = domain.numElem();
 #pragma acc data create(pHalfStep[:length])
 {
-
+#pragma tuner start CalcEnergyForElems_0 e_new(Real_t*:length) e_old(Real_t*:length) p_old(Real_t*:length) q_old(Real_t*:length) delvc(Real_t*:length) work(Real_t*:length)
+#ifdef kernel_tuner
+#pragma acc parallel vector_length(vlength) present(e_new[:length], \
+                                                    e_old[:length], \
+                                                    p_old[:length], \
+                                                    q_old[:length], \
+                                                    delvc[:length], \
+                                                    work[:length])
+#else
 #pragma acc parallel present(e_new[:length], \
-                                  e_old[:length], \
-                                  p_old[:length], \
-                                  q_old[:length], \
-                                  delvc[:length], \
-                                  work[:length])
+                             e_old[:length], \
+                             p_old[:length], \
+                             q_old[:length], \
+                             delvc[:length], \
+                             work[:length])
+#endif
 #pragma acc loop
   for (Index_t i = 0 ; i < length ; ++i) {
     e_new[i] = e_old[i] - Real_t(0.5) * delvc[i] * (p_old[i] + q_old[i])
@@ -2951,6 +2960,7 @@ void CalcEnergyForElems(Domain &domain, Real_t* p_new, Real_t* e_new, Real_t* q_
       e_new[i] = emin ;
     }
   }
+#pragma tuner stop
 
   CalcPressureForElems(domain, pHalfStep, bvc, pbvc, e_new, compHalfStep, vnewc,
       pmin, p_cut, eosvmax, length, regElemList);
