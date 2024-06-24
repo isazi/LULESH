@@ -139,6 +139,12 @@ void ParseCommandLineOptions(int argc, char *argv[],
         }
         i+=2;
       }
+      /* -k */
+      // print some tuning quantities
+      else if (strcmp(argv[i], "-k") == 0) {
+        opts->kt_verbose = 1;
+        i++;
+      }
       /* -v */
       else if (strcmp(argv[i], "-v") == 0) {
 #if VIZ_MESH            

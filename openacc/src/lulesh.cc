@@ -3780,6 +3780,9 @@ int main(int argc, char *argv[])
     maxRegSize = MAX(maxRegSize, locDom->regElemSize(r));
   }
   locDom->AllocateRegionTmps(maxRegSize);
+  if ( opts.kt_verbose == 1 ) {
+    printf("maxRegSize == %d\n", maxRegSize);
+  }
 
   Index_t numElem = locDom->numElem();
   Index_t numElem8 = numElem * 8;
