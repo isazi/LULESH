@@ -10,7 +10,9 @@ from kernel_tuner.utils.directives import (
     generate_directive_function,
     extract_directive_data,
     extract_preprocessor,
+    allocate_signature_memory
 )
+
 
 def command_line() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -47,7 +49,20 @@ code = generate_directive_function(
     app,
     data=data["CalcEnergyForElems_0"]
 )
-print(code)
+args = allocate_signature_memory(data["CalcEnergyForElems_0"], preprocessor)
+
+tune_params = dict()
+tune_params["vlength"] = [32 * i for i in range(1, 33)]
+
+tune_kernel(
+    "CalcEnergyForElems_0",
+    code,
+    0,
+    args,
+    tune_params,
+    compiler_options=compiler_options,
+    compiler="nvc++",
+)
 
 
 
