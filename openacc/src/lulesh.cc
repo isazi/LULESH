@@ -305,7 +305,7 @@ void InitStressTermsForElems(Real_t *p, Real_t *q,
 #ifdef kernel_tuner
   #pragma acc parallel vector_length(vlength) present(p[:numElem], q[:numElem], \
                                   sigxx,sigyy,sigzz)
-#elif
+#else
   #pragma acc parallel present(p[:numElem], q[:numElem], \
                                   sigxx,sigyy,sigzz)
 #endif
