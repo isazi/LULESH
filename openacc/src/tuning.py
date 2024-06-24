@@ -56,6 +56,7 @@ data = extract_directive_data(source, app)
 
 # CalcEnergyForElems_0
 print("Tuning CalcEnergyForElems_0")
+user_preprocessor += [f"#define length {arguments.length}\n"]
 code = generate_directive_function(
     preprocessor + user_preprocessor,
     signatures["CalcEnergyForElems_0"],
@@ -63,7 +64,6 @@ code = generate_directive_function(
     app,
     data=data["CalcEnergyForElems_0"],
 )
-user_preprocessor += [f"#define length {arguments.length}\n"]
 e_new = np.zeros(arguments.length).astype(real_type)
 e_old = np.random.rand(arguments.length).astype(real_type)
 p_old = np.random.rand(arguments.length).astype(real_type)
@@ -93,17 +93,17 @@ tune_kernel(
 
 # InitStressTermsForElems
 print("Tuning InitStressTermsForElems")
+user_preprocessor += [
+    f"#define numElem {arguments.elems}\n",
+    f"#define numNode {arguments.nodes}\n",
+]
 code = generate_directive_function(
-    preprocessor,
+    preprocessor + user_preprocessor,
     signatures["InitStressTermsForElems"],
     functions["InitStressTermsForElems"],
     app,
     data=data["InitStressTermsForElems"],
 )
-user_preprocessor += [
-    f"#define numElem {arguments.elems}\n",
-    f"#define numNode {arguments.nodes}\n",
-]
 p = np.random.rand(arguments.elems).astype(real_type)
 q = np.random.rand(arguments.elems).astype(real_type)
 sigxx = np.zeros(arguments.elems).astype(real_type)
