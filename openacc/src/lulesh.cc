@@ -301,11 +301,19 @@ void InitStressTermsForElems(Real_t *p, Real_t *q,
    //
    // pull in the stresses appropriate to the hydro integration
    //
-#pragma acc parallel loop present(p[:numElem], q[:numElem], \
+#pragma tuner start InitStressTermsForElems p(Real_t*:numElem) q(Real_t*:numElem) sigxx(Real_t*:numElem) sigyy(Real_t*:numElem) sigzz(Real_t*:numElem)
+#ifdef kernel_tuner
+  #pragma acc parallel vector_length(vlength) present(p[:numElem], q[:numElem], \
                                   sigxx,sigyy,sigzz)
+#elif
+  #pragma acc parallel present(p[:numElem], q[:numElem], \
+                                  sigxx,sigyy,sigzz)
+#endif
+  #pragma acc loop
   for (Index_t i = 0 ; i < numElem ; ++i){
     sigxx[i] = sigyy[i] = sigzz[i] =  - p[i] - q[i] ;
   }
+#pragma tuner stop
 }
 
 /******************************************/
@@ -3785,8 +3793,14 @@ int main(int argc, char *argv[])
   }
 
   Index_t numElem = locDom->numElem();
+  if ( opts.kt_verbose == 1 ) {
+    printf("numElem == %d\n", numElem);
+  }
   Index_t numElem8 = numElem * 8;
   Index_t numNode = locDom->numNode();
+  if ( opts.kt_verbose == 1 ) {
+    printf("numNode == %d\n", numNode);
+  }
   Index_t size = locDom->sizeX();
   Index_t numNodeBC = (size+1)*(size+1) ;
   Index_t allElem = numElem +  /* local elem */
