@@ -54,6 +54,8 @@ signatures = extract_directive_signature(source, app)
 functions = extract_directive_code(source, app)
 data = extract_directive_data(source, app)
 
+tuning_results = dict()
+
 # CalcEnergyForElems_0
 print("Tuning CalcEnergyForElems_0")
 user_preprocessor += [f"#define length {arguments.length}\n"]
@@ -80,7 +82,7 @@ metrics["GB/s"] = lambda p: (6 * real_bytes * arguments.length / 10**9) / (
 )
 metrics["GFLOPS/s"] = lambda p: (6 * arguments.length / 10**9) / (p["time"] / 10**3)
 
-tune_kernel(
+tuning_results["CalcEnergyForElems_0"] = tune_kernel(
     "CalcEnergyForElems_0",
     code,
     0,
@@ -115,7 +117,7 @@ metrics["GB/s"] = lambda p: (5 * real_bytes * arguments.elems / 10**9) / (
 )
 metrics["GFLOPS/s"] = lambda p: (2 * arguments.elems / 10**9) / (p["time"] / 10**3)
 
-tune_kernel(
+tuning_results["InitStressTermsForElems"] = tune_kernel(
     "InitStressTermsForElems",
     code,
     0,
@@ -148,7 +150,7 @@ metrics["GB/s"] = lambda p: (3 * real_bytes * arguments.nodes / 10**9) / (
     p["time"] / 10**3
 )
 
-tune_kernel(
+tuning_results["CalcForceForNodes"] = tune_kernel(
     "CalcForceForNodes",
     code,
     0,
@@ -185,7 +187,7 @@ metrics["GB/s"] = lambda p: (9 * real_bytes * arguments.nodes / 10**9) / (
 )
 metrics["GFLOPS/s"] = lambda p: (3 * arguments.nodes / 10**9) / (p["time"] / 10**3)
 
-tune_kernel(
+tuning_results["CalcAccelerationForNodes"] = tune_kernel(
     "CalcAccelerationForNodes",
     code,
     0,
@@ -206,7 +208,7 @@ code = generate_directive_function(
     functions["CalcPositionForNodes"],
     app,
     data=data["CalcPositionForNodes"],
-    )
+)
 x = np.random.rand(arguments.nodes).astype(real_type)
 y = np.random.rand(arguments.nodes).astype(real_type)
 z = np.random.rand(arguments.nodes).astype(real_type)
@@ -219,11 +221,11 @@ tune_params.clear()
 tune_params["vlength_CalcPositionForNodes"] = [32 * i for i in range(1, 33)]
 tune_params["tile_CalcPositionForNodes"] = [2**i for i in range(0, 8)]
 metrics["GB/s"] = lambda p: (9 * real_bytes * arguments.nodes / 10**9) / (
-        p["time"] / 10**3
+    p["time"] / 10**3
 )
 metrics["GFLOPS/s"] = lambda p: (6 * arguments.nodes / 10**9) / (p["time"] / 10**3)
 
-tune_kernel(
+tuning_results["CalcPositionForNodes"] = tune_kernel(
     "CalcPositionForNodes",
     code,
     0,
