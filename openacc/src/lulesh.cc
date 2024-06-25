@@ -2380,13 +2380,27 @@ void CalcLagrangeElements(Domain& domain, Real_t* vnew)
                            deltatime, numElem, numNode);
 
     // element loop to do some stuff not included in the elemlib function.
+#pragma tuner start CalcLagrangeElements vdov(Real_t*:numElem) dxx(Real_t*:numElem) dyy(Real_t*:numElem) dzz(Real_t*:numElem) vnew(Real_t*:numElem)
     int abort = 0;
-#pragma acc parallel loop present(vdov[:numElem], \
-                                  dxx[:numElem], \
-                                  dyy[:numElem], \
-                                  dzz[:numElem], \
-                                  vnew[:numElem]) \
-                          private(abort)
+#ifdef kernel_tuner
+  #pragma acc parallel vector_length(vlength_CalcLagrangeElements) \
+    present (vdov[:numElem], \
+             dxx[:numElem], \
+             dyy[:numElem], \
+             dzz[:numElem], \
+             vnew[:numElem]) \
+    private(abort)
+  #pragma acc loop tile(tile_CalcLagrangeElements)
+#else
+  #pragma acc parallel present(vdov[:numElem], \
+                               dxx[:numElem], \
+                               dyy[:numElem], \
+                               dzz[:numElem], \
+                               vnew[:numElem]) \
+                       private(abort)
+  #pragma acc loop
+#endif
+
     for ( Index_t k=0 ; k<numElem ; ++k )
     {
       // calc strain rate and apply as constraint (only done in FB element)
@@ -2405,6 +2419,7 @@ void CalcLagrangeElements(Domain& domain, Real_t* vnew)
         abort = 1;
       }
     }
+#pragma tuner stop
     if(abort) {
 #if USE_MPI
         MPI_Abort(MPI_COMM_WORLD, VolumeError) ;

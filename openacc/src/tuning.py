@@ -235,3 +235,38 @@ tuning_results["CalcPositionForNodes"] = tune_kernel(
     compiler="nvc++",
     metrics=metrics,
 )
+
+# CalcLagrangeElements
+print("Tuning CalcLagrangeElements")
+code = generate_directive_function(
+    preprocessor + user_preprocessor,
+    signatures["CalcLagrangeElements"],
+    functions["CalcLagrangeElements"],
+    app,
+    data=data["CalcLagrangeElements"],
+    )
+vdov = np.zeros(arguments.elems).astype(real_type)
+dxx = np.random.rand(arguments.nodes).astype(real_type)
+dyy = np.random.rand(arguments.nodes).astype(real_type)
+dzz = np.random.rand(arguments.nodes).astype(real_type)
+vnew = np.random.rand(arguments.nodes).astype(real_type)
+args = [vdov, dxx, dyy, dzz, vnew]
+
+tune_params.clear()
+tune_params["vlength_CalcLagrangeElements"] = [32 * i for i in range(1, 33)]
+tune_params["tile_CalcLagrangeElements"] = [2**i for i in range(0, 8)]
+metrics["GB/s"] = lambda p: (10 * real_bytes * arguments.nodes / 10**9) / (
+        p["time"] / 10**3
+)
+metrics["GFLOPS/s"] = lambda p: (6 * arguments.nodes / 10**9) / (p["time"] / 10**3)
+
+tuning_results["CalcLagrangeElements"] = tune_kernel(
+    "CalcLagrangeElements",
+    code,
+    0,
+    args,
+    tune_params,
+    compiler_options=compiler_options,
+    compiler="nvc++",
+    metrics=metrics,
+)
