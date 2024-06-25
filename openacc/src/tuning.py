@@ -244,7 +244,7 @@ code = generate_directive_function(
     functions["CalcLagrangeElements"],
     app,
     data=data["CalcLagrangeElements"],
-    )
+)
 vdov = np.zeros(arguments.elems).astype(real_type)
 dxx = np.random.rand(arguments.nodes).astype(real_type)
 dyy = np.random.rand(arguments.nodes).astype(real_type)
@@ -256,7 +256,7 @@ tune_params.clear()
 tune_params["vlength_CalcLagrangeElements"] = [32 * i for i in range(1, 33)]
 tune_params["tile_CalcLagrangeElements"] = [2**i for i in range(0, 8)]
 metrics["GB/s"] = lambda p: (10 * real_bytes * arguments.nodes / 10**9) / (
-        p["time"] / 10**3
+    p["time"] / 10**3
 )
 metrics["GFLOPS/s"] = lambda p: (6 * arguments.nodes / 10**9) / (p["time"] / 10**3)
 
