@@ -1714,18 +1714,30 @@ void CalcPositionForNodes(Real_t *x,  Real_t *y,  Real_t *z,
                           Real_t *xd, Real_t *yd, Real_t *zd,
                           const Real_t dt, Index_t numNode)
 {
-#pragma acc parallel loop present(x[:numNode], \
-                                  y[:numNode], \
-                                  z[:numNode], \
-                                  xd[:numNode], \
-                                  yd[:numNode], \
-                                  zd[:numNode])
+#pragma tuner start CalcPositionForNodes x(Real_t*:numNode) y(Real_t*:numNode) z(Real_t*:numNode) xd(Real_t*:numNode) yd(Real_t*:numNode) zd(Real_t*:numNode)
+#ifdef kernel_tuner
+  #pragma acc parallel vector_length(vlength) present(x[:numNode], \
+                                    y[:numNode], \
+                                    z[:numNode], \
+                                    xd[:numNode], \
+                                    yd[:numNode], \
+                                    zd[:numNode])
+#else
+  #pragma acc parallel present(x[:numNode], \
+                                    y[:numNode], \
+                                    z[:numNode], \
+                                    xd[:numNode], \
+                                    yd[:numNode], \
+                                    zd[:numNode])
+#endif
+#pragma acc loop
   for ( Index_t i = 0 ; i < numNode ; ++i )
   {
     x[i] += xd[i] * dt ;
     y[i] += yd[i] * dt ;
     z[i] += zd[i] * dt ;
   }
+#pragma tuner stop
 }
 
 /******************************************/

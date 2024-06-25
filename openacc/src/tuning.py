@@ -167,7 +167,7 @@ code = generate_directive_function(
     functions["CalcAccelerationForNodes"],
     app,
     data=data["CalcAccelerationForNodes"],
-    )
+)
 fx = np.random.rand(arguments.nodes).astype(real_type)
 fy = np.random.rand(arguments.nodes).astype(real_type)
 fz = np.random.rand(arguments.nodes).astype(real_type)
@@ -178,12 +178,47 @@ nodalMass = np.random.rand(arguments.nodes).astype(real_type)
 args = [fx, fy, fz, xdd, ydd, zdd, nodalMass]
 
 metrics["GB/s"] = lambda p: (9 * real_bytes * arguments.nodes / 10**9) / (
-        p["time"] / 10**3
+    p["time"] / 10**3
 )
 metrics["GFLOPS/s"] = lambda p: (3 * arguments.nodes / 10**9) / (p["time"] / 10**3)
 
 tune_kernel(
     "CalcAccelerationForNodes",
+    code,
+    0,
+    args,
+    tune_params,
+    compiler_options=compiler_options,
+    compiler="nvc++",
+    metrics=metrics,
+)
+
+
+# CalcPositionForNodes
+print("Tuning CalcPositionForNodes")
+user_preprocessor += ["#define dt Real_t(0.4325)\n"]
+code = generate_directive_function(
+    preprocessor + user_preprocessor,
+    signatures["CalcPositionForNodes"],
+    functions["CalcPositionForNodes"],
+    app,
+    data=data["CalcPositionForNodes"],
+    )
+x = np.random.rand(arguments.nodes).astype(real_type)
+y = np.random.rand(arguments.nodes).astype(real_type)
+z = np.random.rand(arguments.nodes).astype(real_type)
+xd = np.random.rand(arguments.nodes).astype(real_type)
+yd = np.random.rand(arguments.nodes).astype(real_type)
+zd = np.random.rand(arguments.nodes).astype(real_type)
+args = [x, y, z, xd, yd, zd]
+
+metrics["GB/s"] = lambda p: (9 * real_bytes * arguments.nodes / 10**9) / (
+        p["time"] / 10**3
+)
+metrics["GFLOPS/s"] = lambda p: (6 * arguments.nodes / 10**9) / (p["time"] / 10**3)
+
+tune_kernel(
+    "CalcPositionForNodes",
     code,
     0,
     args,
