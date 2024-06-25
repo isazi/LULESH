@@ -1551,14 +1551,23 @@ static inline void CalcForceForNodes(Domain& domain)
   Real_t *fy = domain.fy();
   Real_t *fz = domain.fz();
 
-#pragma acc parallel loop present(fx[:numNode], \
-                                  fy[:numNode], \
-                                  fz[:numNode])
+#pragma tuner start CalcForceForNodes fx(Real_t*:numNode) fy(Real_t*:numNode) fz(Real_t*:numNode)
+#ifdef kernel_tuner
+  #pragma acc parallel vector_length(vlength) present(fx[:numNode], \
+    fy[:numNode], \
+    fz[:numNode])
+#else
+  #pragma acc parallel present(fx[:numNode], \
+                               fy[:numNode], \
+                               fz[:numNode])
+#endif
+  #pragma acc loop
   for (Index_t i=0; i<numNode; ++i) {
     fx[i] = Real_t(0.0);
     fy[i] = Real_t(0.0);
     fz[i] = Real_t(0.0);
   }
+#pragma tuner stop
 
   /* Calcforce calls partial, force, hourq */
   CalcVolumeForceForElems(domain, fx, fy, fz) ;

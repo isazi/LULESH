@@ -95,7 +95,6 @@ tune_kernel(
 print("Tuning InitStressTermsForElems")
 user_preprocessor += [
     f"#define numElem {arguments.elems}\n",
-    f"#define numNode {arguments.nodes}\n",
 ]
 code = generate_directive_function(
     preprocessor + user_preprocessor,
@@ -118,6 +117,39 @@ metrics["GFLOPS/s"] = lambda p: (2 * arguments.elems / 10**9) / (p["time"] / 10*
 
 tune_kernel(
     "InitStressTermsForElems",
+    code,
+    0,
+    args,
+    tune_params,
+    compiler_options=compiler_options,
+    compiler="nvc++",
+    metrics=metrics,
+)
+
+# CalcForceForNodes
+print("Tuning CalcForceForNodes")
+user_preprocessor += [
+    f"#define numNode {arguments.nodes}\n",
+]
+code = generate_directive_function(
+    preprocessor + user_preprocessor,
+    signatures["CalcForceForNodes"],
+    functions["CalcForceForNodes"],
+    app,
+    data=data["CalcForceForNodes"],
+)
+fx = np.random.rand(arguments.nodes).astype(real_type)
+fy = np.random.rand(arguments.nodes).astype(real_type)
+fz = np.random.rand(arguments.nodes).astype(real_type)
+args = [fx, fy, fz]
+
+metrics.clear()
+metrics["GB/s"] = lambda p: (3 * real_bytes * arguments.nodes / 10**9) / (
+    p["time"] / 10**3
+)
+
+tune_kernel(
+    "CalcForceForNodes",
     code,
     0,
     args,
