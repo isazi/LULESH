@@ -1716,7 +1716,7 @@ void CalcPositionForNodes(Real_t *x,  Real_t *y,  Real_t *z,
 {
 #pragma tuner start CalcPositionForNodes x(Real_t*:numNode) y(Real_t*:numNode) z(Real_t*:numNode) xd(Real_t*:numNode) yd(Real_t*:numNode) zd(Real_t*:numNode)
 #ifdef kernel_tuner
-  #pragma acc parallel vector_length(vlength_tile_CalcPositionForNodes) present(x[:numNode], \
+  #pragma acc parallel vector_length(vlength_CalcPositionForNodes) present(x[:numNode], \
            y[:numNode], \
            z[:numNode], \
            xd[:numNode], \
