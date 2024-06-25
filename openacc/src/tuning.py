@@ -158,3 +158,37 @@ tune_kernel(
     compiler="nvc++",
     metrics=metrics,
 )
+
+# CalcAccelerationForNodes
+print("Tuning CalcAccelerationForNodes")
+code = generate_directive_function(
+    preprocessor + user_preprocessor,
+    signatures["CalcAccelerationForNodes"],
+    functions["CalcAccelerationForNodes"],
+    app,
+    data=data["CalcAccelerationForNodes"],
+    )
+fx = np.random.rand(arguments.nodes).astype(real_type)
+fy = np.random.rand(arguments.nodes).astype(real_type)
+fz = np.random.rand(arguments.nodes).astype(real_type)
+xdd = np.zeros(arguments.nodes).astype(real_type)
+ydd = np.zeros(arguments.nodes).astype(real_type)
+zdd = np.zeros(arguments.nodes).astype(real_type)
+nodalMass = np.random.rand(arguments.nodes).astype(real_type)
+args = [fx, fy, fz, xdd, ydd, zdd, nodalMass]
+
+metrics["GB/s"] = lambda p: (9 * real_bytes * arguments.nodes / 10**9) / (
+        p["time"] / 10**3
+)
+metrics["GFLOPS/s"] = lambda p: (3 * arguments.nodes / 10**9) / (p["time"] / 10**3)
+
+tune_kernel(
+    "CalcAccelerationForNodes",
+    code,
+    0,
+    args,
+    tune_params,
+    compiler_options=compiler_options,
+    compiler="nvc++",
+    metrics=metrics,
+)
