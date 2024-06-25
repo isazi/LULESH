@@ -1607,13 +1607,14 @@ void CalcAccelerationForNodes(Real_t *xdd, Real_t *ydd, Real_t *zdd,
 {
 #pragma tuner start CalcAccelerationForNodes fx(Real_t*:numNode) fy(Real_t*:numNode) fz(Real_t*:numNode) xdd(Real_t*:numNode) ydd(Real_t*:numNode) zdd(Real_t*:numNode) nodalMass(Real_t*:numNode)
 #ifdef kernel_tuner
-  #pragma acc parallel vector_length(vlength) present(fx[:numNode], \
+  #pragma acc parallel vector_length(vlength_CalcAccelerationForNodes) present(fx[:numNode], \
                                       fy[:numNode], \
                                       fz[:numNode], \
                                       xdd[:numNode], \
                                       ydd[:numNode], \
                                       zdd[:numNode], \
                                       nodalMass[:numNode])
+  #pragma acc loop tile(tile_CalcAccelerationForNodes)
 #else
   #pragma acc parallel present(fx[:numNode], \
                                     fy[:numNode], \
@@ -1622,8 +1623,8 @@ void CalcAccelerationForNodes(Real_t *xdd, Real_t *ydd, Real_t *zdd,
                                     ydd[:numNode], \
                                     zdd[:numNode], \
                                     nodalMass[:numNode])
+  #pragma acc loop
 #endif
-#pragma acc loop
   for (Index_t i = 0; i < numNode; ++i) {
     xdd[i] = fx[i] / nodalMass[i];
     ydd[i] = fy[i] / nodalMass[i];

@@ -177,6 +177,9 @@ zdd = np.zeros(arguments.nodes).astype(real_type)
 nodalMass = np.random.rand(arguments.nodes).astype(real_type)
 args = [fx, fy, fz, xdd, ydd, zdd, nodalMass]
 
+tune_params.clear()
+tune_params["vlength_CalcAccelerationForNodes"] = [32 * i for i in range(1, 33)]
+tune_params["tile_CalcAccelerationForNodes"] = [2**i for i in range(0, 8)]
 metrics["GB/s"] = lambda p: (9 * real_bytes * arguments.nodes / 10**9) / (
     p["time"] / 10**3
 )
