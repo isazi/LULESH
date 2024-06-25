@@ -1629,6 +1629,7 @@ void CalcAccelerationForNodes(Real_t *xdd, Real_t *ydd, Real_t *zdd,
     ydd[i] = fy[i] / nodalMass[i];
     zdd[i] = fz[i] / nodalMass[i];
   }
+#pragma tuner stop
 }
 
 /******************************************/
