@@ -1605,7 +1605,7 @@ void CalcAccelerationForNodes(Real_t *xdd, Real_t *ydd, Real_t *zdd,
                               Real_t *fx, Real_t *fy, Real_t *fz,
                               Real_t *nodalMass, Index_t numNode)
 {
-#pragma tuner start CalcAccelerationForNodes fx(Real_t*:numNode) fy(Real_t*:numNode) fz(Real_t*:numNode) xdd(Real_t:numNode) ydd(Real_t:numNode) zdd(Real_t:numNode) nodalMass(Real_t*:numNode)
+#pragma tuner start CalcAccelerationForNodes fx(Real_t*:numNode) fy(Real_t*:numNode) fz(Real_t*:numNode) xdd(Real_t*:numNode) ydd(Real_t*:numNode) zdd(Real_t*:numNode) nodalMass(Real_t*:numNode)
 #ifdef kernel_tuner
   #pragma acc parallel vector_length(vlength) present(fx[:numNode], \
                                       fy[:numNode], \
