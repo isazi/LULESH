@@ -56,7 +56,7 @@ user_preprocessor = [
     f"#define length {arguments.length}\n",
     f"#define numElem {arguments.elems}\n",
     f"#define numNode {arguments.nodes}\n",
-    "#define rho0 Real_t(1.0)\n"
+    "#define rho0 Real_t(1.0)\n",
 ]
 
 # extracting tunable code
@@ -118,7 +118,7 @@ code = generate_directive_function(
     functions["CalcEnergyForElems_1"],
     app,
     data=data["CalcEnergyForElems_1"],
-    )
+)
 comphalfstep = np.random.rand(arguments.length).astype(real_type)
 phalfstep = np.random.rand(arguments.length).astype(real_type)
 delvc = np.random.rand(arguments.length).astype(real_type)
@@ -130,16 +130,30 @@ q_new = np.zeros(arguments.length).astype(real_type)
 pbvc = np.random.rand(arguments.length).astype(real_type)
 bvc = np.random.rand(arguments.length).astype(real_type)
 e_new = np.random.rand(arguments.length).astype(real_type)
-args = [comphalfstep, phalfstep, delvc, p_old, q_old, ql_old, qq_old, q_new, pbvc, bvc, e_new]
+args = [
+    comphalfstep,
+    phalfstep,
+    delvc,
+    p_old,
+    q_old,
+    ql_old,
+    qq_old,
+    q_new,
+    pbvc,
+    bvc,
+    e_new,
+]
 
 tune_params.clear()
 tune_params["vlength_CalcEnergyForElems_1"] = [32 * i for i in range(1, 33)]
 tune_params["tile_CalcEnergyForElems_1"] = [2**i for i in range(0, 8)]
 metrics.clear()
 metrics["GB/s"] = lambda p: (9 * real_bytes * arguments.length / 10**9) / (
-        p["time"] / 10**3
+    p["time"] / 10**3
 )
-metrics["GFLOPS/s"] = lambda p: (10 * arguments.length / 10**9) / (p["time"] / 10**3)
+metrics["GFLOPS/s"] = lambda p: (10 * arguments.length / 10**9) / (
+    p["time"] / 10**3
+)
 
 tuning_results["CalcEnergyForElems_1"] = tune_kernel(
     "CalcEnergyForElems_1",
