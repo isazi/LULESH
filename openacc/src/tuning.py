@@ -334,6 +334,7 @@ e_old = np.random.rand(arguments.length).astype(real_type)
 vnewc = np.random.rand(arguments.elems).astype(real_type)
 args = [regelemlist, compression, pbvc, p_new, bvc, e_old, vnewc]
 
+tune_params.clear()
 tune_params["vlength_CalcPressureForElems"] = [32 * i for i in range(1, 33)]
 tune_params["tile_CalcPressureForElems"] = [2**i for i in range(0, 8)]
 metrics["GB/s"] = lambda p: (10 * real_bytes * arguments.length / 10**9) / (
