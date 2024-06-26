@@ -2951,24 +2951,26 @@ void CalcPressureForElems(Domain &domain, Real_t* p_new, Real_t* bvc,
 {
 
   volatile Index_t numElem = domain.numElem();
+#pragma tuner start CalcPressureForElems regElemList(Index_t*:length) compression(Real_t*:length) pbvc(Real_t*:length) p_new(Real_t*:length) bvc(Real_t*:length) e_old(Real_t*:length) vnewc(Real_t*:numElem)
 #ifdef kernel_tuner
-  #pragma acc parallel vector_length(vlength) present(regElemList[:length], \
+  #pragma acc parallel vector_length(vlength_CalcPressureForElems) present(regElemList[:length], \
                                                       compression[:length], \
                                                       pbvc[:length], \
                                                       p_new[:length], \
                                                       bvc[:length], \
                                                       e_old[:length], \
                                                       vnewc[:numElem])
+  #pragma acc loop tile(tile_CalcPressureForElems)
 #else
-  #pragma acc parallel  present(regElemList[:length], \
-                                compression[:length], \
-                                pbvc[:length], \
-                                p_new[:length], \
-                                bvc[:length], \
-                                e_old[:length], \
-                                vnewc[:numElem])
+  #pragma acc parallel present(regElemList[:length], \
+                               compression[:length], \
+                               pbvc[:length], \
+                               p_new[:length], \
+                               bvc[:length], \
+                               e_old[:length], \
+                               vnewc[:numElem])
+  #pragma acc loop
 #endif
-#pragma acc loop
   for (Index_t i = 0 ; i < length ; ++i){
     Index_t elem = regElemList[i];
 
@@ -2988,6 +2990,7 @@ void CalcPressureForElems(Domain &domain, Real_t* p_new, Real_t* bvc,
     if    (p_new[i]       <  pmin)
       p_new[i]   = pmin ;
   }
+#pragma tuner stop
 }
 
 /******************************************/

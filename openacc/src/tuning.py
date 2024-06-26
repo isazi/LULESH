@@ -47,7 +47,7 @@ if arguments.float:
     real_type = np.float32
     real_bytes = 4
 # preprocessor
-user_preprocessor = ["#define emin Real_t(-1.0e+15)\n", "#define u_cut Real_t(1.0e-7)"]
+user_preprocessor = ["#define emin Real_t(-1.0e+15)\n", "#define u_cut Real_t(1.0e-7)\n", "#define p_cutReal_t(1.0e-7)\n", "#define eosvmax Real_t(1.0e+9)\n", "#define pmin Real_t(0.)\n"]
 
 # extracting tunable code
 app = Code(OpenACC(), Cxx())
@@ -307,6 +307,42 @@ metrics["GFLOPS/s"] = lambda p: (6 * arguments.nodes / 10**9) / (p["time"] / 10*
 
 tuning_results["CalcVelocityForNodes"] = tune_kernel(
     "CalcVelocityForNodes",
+    code,
+    0,
+    args,
+    tune_params,
+    compiler_options=compiler_options,
+    compiler="nvc++",
+    metrics=metrics,
+)
+
+# CalcPressureForElems
+print("Tuning CalcPressureForElems")
+code = generate_directive_function(
+    preprocessor + user_preprocessor,
+    signatures["CalcPressureForElems"],
+    functions["CalcPressureForElems"],
+    app,
+    data=data["CalcPressureForElems"],
+    )
+regelemlist = np.random.randint(0, arguments.elems, size=arguments.length).astype(np.int32)
+compression = np.random.rand(arguments.length).astype(real_type)
+pbvc = np.zeros(arguments.length).astype(real_type)
+p_new = np.zeros(arguments.length).astype(real_type)
+bvc = np.zeros(arguments.length).astype(real_type)
+e_old = np.random.rand(arguments.length).astype(real_type)
+vnewc = np.random.rand(arguments.elems).astype(real_type)
+args = [regelemlist, compression, pbvc, p_new, bvc, e_old, vnewc]
+
+tune_params["vlength_CalcPressureForElems"] = [32 * i for i in range(1, 33)]
+tune_params["tile_CalcPressureForElems"] = [2**i for i in range(0, 8)]
+metrics["GB/s"] = lambda p: (10 * real_bytes * arguments.length / 10**9) / (
+        p["time"] / 10**3
+)
+metrics["GFLOPS/s"] = lambda p: (4 * arguments.length / 10**9) / (p["time"] / 10**3)
+
+tuning_results["CalcPressureForElems"] = tune_kernel(
+    "CalcPressureForElems",
     code,
     0,
     args,
