@@ -47,7 +47,7 @@ if arguments.float:
     real_type = np.float32
     real_bytes = 4
 # preprocessor
-user_preprocessor = ["#define emin Real_t(-1.0e+15)\n", "#define u_cut Real_t(1.0e-7)\n", "#define p_cutReal_t(1.0e-7)\n", "#define eosvmax Real_t(1.0e+9)\n", "#define pmin Real_t(0.)\n"]
+user_preprocessor = ["#define emin Real_t(-1.0e+15)\n", "#define u_cut Real_t(1.0e-7)\n", "#define p_cut Real_t(1.0e-7)\n", "#define eosvmax Real_t(1.0e+9)\n", "#define pmin Real_t(0.)\n"]
 
 # extracting tunable code
 app = Code(OpenACC(), Cxx())
