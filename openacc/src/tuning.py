@@ -109,6 +109,48 @@ tuning_results["CalcEnergyForElems_0"] = tune_kernel(
     metrics=metrics,
 )
 
+# CalcEnergyForElems_1
+print("Tuning CalcEnergyForElems_1")
+code = generate_directive_function(
+    preprocessor + user_preprocessor,
+    signatures["CalcEnergyForElems_1"],
+    functions["CalcEnergyForElems_1"],
+    app,
+    data=data["CalcEnergyForElems_1"],
+    )
+comphalfstep = np.random.rand(arguments.length).astype(real_type)
+phalfstep = np.random.rand(arguments.length).astype(real_type)
+delvc = np.random.rand(arguments.length).astype(real_type)
+p_old = np.random.rand(arguments.length).astype(real_type)
+q_old = np.random.rand(arguments.length).astype(real_type)
+ql_old = np.random.rand(arguments.length).astype(real_type)
+qq_old = np.random.rand(arguments.length).astype(real_type)
+q_new = np.zeros(arguments.length).astype(real_type)
+pbvc = np.random.rand(arguments.length).astype(real_type)
+bvc = np.random.rand(arguments.length).astype(real_type)
+e_new = np.random.rand(arguments.length).astype(real_type)
+args = [comphalfstep, phalfstep, delvc, p_old, q_old, ql_old, qq_old, q_new, pbvc, bvc, e_new]
+
+tune_params.clear()
+tune_params["vlength_CalcEnergyForElems_1"] = [32 * i for i in range(1, 33)]
+tune_params["tile_CalcEnergyForElems_1"] = [2**i for i in range(0, 8)]
+metrics.clear()
+metrics["GB/s"] = lambda p: (9 * real_bytes * arguments.length / 10**9) / (
+        p["time"] / 10**3
+)
+metrics["GFLOPS/s"] = lambda p: (10 * arguments.length / 10**9) / (p["time"] / 10**3)
+
+tuning_results["CalcEnergyForElems_1"] = tune_kernel(
+    "CalcEnergyForElems_1",
+    code,
+    0,
+    args,
+    tune_params,
+    compiler_options=compiler_options,
+    compiler="nvc++",
+    metrics=metrics,
+)
+
 # InitStressTermsForElems
 print("Tuning InitStressTermsForElems")
 code = generate_directive_function(

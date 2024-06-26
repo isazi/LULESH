@@ -3043,18 +3043,34 @@ void CalcEnergyForElems(Domain &domain, Real_t* p_new, Real_t* e_new, Real_t* q_
   CalcPressureForElems(domain, pHalfStep, bvc, pbvc, e_new, compHalfStep, vnewc,
       pmin, p_cut, eosvmax, length, regElemList);
 
-#pragma acc parallel present(compHalfStep[:length], \
-                                  pHalfStep[:length], \
-                                  delvc[:length], \
-                                  p_old[:length], \
-                                  q_old[:length], \
-                                  ql_old[:length], \
-                                  qq_old[:length], \
-                                  q_new[:length], \
-                                  pbvc[:length], \
-                                  bvc[:length], \
-                                  e_new[:length])
-#pragma acc loop
+#pragma tuner start CalcEnergyForElems_1 compHalfStep(Real_t*:length) pHalfStep(Real_t*:length) delvc(Real_t*:length) p_old(Real_t*:length) q_old(Real_t*:length) ql_old(Real_t*:length) qq_old(Real_t*:length) q_new(Real_t*:length) pbvc(Real_t*:length) bvc(Real_t*:length) e_new(Real_t*:length)
+#ifdef kernel_tuner
+  #pragma acc parallel vector_length(vlength_CalcEnergyForElems_1) present(compHalfStep[:length], \
+                                      pHalfStep[:length], \
+                                      delvc[:length], \
+                                      p_old[:length], \
+                                      q_old[:length], \
+                                      ql_old[:length], \
+                                      qq_old[:length], \
+                                      q_new[:length], \
+                                      pbvc[:length], \
+                                      bvc[:length], \
+                                      e_new[:length])
+  #pragma acc loop tile(tile_CalcEnergyForElems_0)
+#else
+  #pragma acc parallel present(compHalfStep[:length], \
+                                    pHalfStep[:length], \
+                                    delvc[:length], \
+                                    p_old[:length], \
+                                    q_old[:length], \
+                                    ql_old[:length], \
+                                    qq_old[:length], \
+                                    q_new[:length], \
+                                    pbvc[:length], \
+                                    bvc[:length], \
+                                    e_new[:length])
+  #pragma acc loop
+#endif
   for (Index_t i = 0 ; i < length ; ++i) {
     Real_t vhalf = Real_t(1.) / (Real_t(1.) + compHalfStep[i]) ;
 
@@ -3078,6 +3094,7 @@ void CalcEnergyForElems(Domain &domain, Real_t* p_new, Real_t* e_new, Real_t* q_
       * (  Real_t(3.0)*(p_old[i]     + q_old[i])
          - Real_t(4.0)*(pHalfStep[i] + q_new[i])) ;
   }
+#pragma tuner stop
 
 #pragma acc parallel present(e_new[:length], \
                                   work[:length])
