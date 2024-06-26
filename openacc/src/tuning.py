@@ -32,7 +32,7 @@ with open("lulesh.cc") as file:
 # LULESH compiler options
 compiler_options = [
     "-acc=gpu",
-    "-gpu=cc86",
+    "-gpu=cc86,fma",
     "-I.",
     "-mp",
     "-lm",

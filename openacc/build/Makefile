@@ -27,7 +27,7 @@ OBJECTS2.0 = $(SOURCES2.0:.cc=.o)
 SILO_INCDIR = /usr/gapps/silo/4.8/chaos_5_x86_64_ib_pgcc/include
 SILO_LIBDIR = /usr/gapps/silo/4.8/chaos_5_x86_64_ib_pgcc/lib
 
-ACCFLAGS = -acc=gpu -gpu=cc86 -Minfo=accel
+ACCFLAGS = -acc=gpu -gpu=cc86,fma -Minfo=accel
 CXXFLAGS = -mp --restrict -Mautoinline -Minline=levels:20 $(ACCFLAGS) -O2 
 LDFLAGS = -mp $(ACCFLAGS) 
 
