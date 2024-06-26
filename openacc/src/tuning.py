@@ -54,6 +54,8 @@ signatures = extract_directive_signature(source, app)
 functions = extract_directive_code(source, app)
 data = extract_directive_data(source, app)
 
+tune_params = dict()
+metrics = dict()
 tuning_results = dict()
 
 # CalcEnergyForElems_0
@@ -74,9 +76,8 @@ delvc = np.random.rand(arguments.length).astype(real_type)
 work = np.random.rand(arguments.length).astype(real_type)
 args = [e_new, e_old, p_old, q_old, delvc, work]
 
-tune_params = dict()
-tune_params["vlength"] = [32 * i for i in range(1, 33)]
-metrics = dict()
+tune_params["vlength_CalcEnergyForElems_0"] = [32 * i for i in range(1, 33)]
+tune_params["tile_CalcEnergyForElems_0"] = [2**i for i in range(0, 8)]
 metrics["GB/s"] = lambda p: (6 * real_bytes * arguments.length / 10**9) / (
     p["time"] / 10**3
 )
