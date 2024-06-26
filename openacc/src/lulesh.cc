@@ -2939,21 +2939,21 @@ void CalcPressureForElems(Domain &domain, Real_t* p_new, Real_t* bvc,
 
   volatile Index_t numElem = domain.numElem();
 #ifdef kernel_tuner
-#pragma acc parallel vector_length(vlength) present(regElemList[:length], \
-                                                    compression[:length], \
-                                                    pbvc[:length], \
-                                                    p_new[:length], \
-                                                    bvc[:length], \
-                                                    e_old[:length], \
-                                                    vnewc[:numElem])
+  #pragma acc parallel vector_length(vlength) present(regElemList[:length], \
+                                                      compression[:length], \
+                                                      pbvc[:length], \
+                                                      p_new[:length], \
+                                                      bvc[:length], \
+                                                      e_old[:length], \
+                                                      vnewc[:numElem])
 #else
-#pragma acc parallel  present(regElemList[:length], \
-                              compression[:length], \
-                              pbvc[:length], \
-                              p_new[:length], \
-                              bvc[:length], \
-                              e_old[:length], \
-                              vnewc[:numElem])
+  #pragma acc parallel  present(regElemList[:length], \
+                                compression[:length], \
+                                pbvc[:length], \
+                                p_new[:length], \
+                                bvc[:length], \
+                                e_old[:length], \
+                                vnewc[:numElem])
 #endif
 #pragma acc loop
   for (Index_t i = 0 ; i < length ; ++i){

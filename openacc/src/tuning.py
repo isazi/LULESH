@@ -1,4 +1,5 @@
 import argparse
+import json
 import numpy as np
 from kernel_tuner import tune_kernel
 from kernel_tuner.utils.directives import (
@@ -19,6 +20,7 @@ def command_line() -> argparse.Namespace:
     parser.add_argument("--elems", help="numElem", type=int, default=27000)
     parser.add_argument("--nodes", help="numNode", type=int, default=29791)
     parser.add_argument("--float", help="Use single precision", action="store_true")
+    parser.add_argument("--save", help="Store results file", action="store_true")
     return parser.parse_args()
 
 
@@ -277,3 +279,7 @@ tuning_results["CalcLagrangeElements"] = tune_kernel(
     compiler="nvc++",
     metrics=metrics,
 )
+
+if arguments.save:
+    with open("tuning_results.json", "w") as file:
+        json.dump(tuning_results, file)
