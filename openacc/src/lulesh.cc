@@ -3056,7 +3056,7 @@ void CalcEnergyForElems(Domain &domain, Real_t* p_new, Real_t* e_new, Real_t* q_
                                       pbvc[:length], \
                                       bvc[:length], \
                                       e_new[:length])
-  #pragma acc loop tile(tile_CalcEnergyForElems_0)
+  #pragma acc loop tile(tile_CalcEnergyForElems_1)
 #else
   #pragma acc parallel present(compHalfStep[:length], \
                                     pHalfStep[:length], \

@@ -56,6 +56,7 @@ user_preprocessor = [
     f"#define length {arguments.length}\n",
     f"#define numElem {arguments.elems}\n",
     f"#define numNode {arguments.nodes}\n",
+    "#define rho0 Real_t(1.0)\n"
 ]
 
 # extracting tunable code
