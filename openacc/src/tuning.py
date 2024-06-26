@@ -47,7 +47,16 @@ if arguments.float:
     real_type = np.float32
     real_bytes = 4
 # preprocessor
-user_preprocessor = ["#define emin Real_t(-1.0e+15)\n", "#define u_cut Real_t(1.0e-7)\n", "#define p_cut Real_t(1.0e-7)\n", "#define eosvmax Real_t(1.0e+9)\n", "#define pmin Real_t(0.)\n"]
+user_preprocessor = [
+    "#define emin Real_t(-1.0e+15)\n",
+    "#define u_cut Real_t(1.0e-7)\n",
+    "#define p_cut Real_t(1.0e-7)\n",
+    "#define eosvmax Real_t(1.0e+9)\n",
+    "#define pmin Real_t(0.)\n",
+    f"#define length {arguments.length}\n",
+    f"#define numElem {arguments.elems}\n",
+    f"#define numNode {arguments.nodes}\n",
+]
 
 # extracting tunable code
 app = Code(OpenACC(), Cxx())
@@ -60,9 +69,11 @@ tune_params = dict()
 metrics = dict()
 tuning_results = dict()
 
+# Element kernels
+print("Tuning element kernels")
+
 # CalcEnergyForElems_0
 print("Tuning CalcEnergyForElems_0")
-user_preprocessor += [f"#define length {arguments.length}\n"]
 code = generate_directive_function(
     preprocessor + user_preprocessor,
     signatures["CalcEnergyForElems_0"],
@@ -78,8 +89,10 @@ delvc = np.random.rand(arguments.length).astype(real_type)
 work = np.random.rand(arguments.length).astype(real_type)
 args = [e_new, e_old, p_old, q_old, delvc, work]
 
+tune_params.clear()
 tune_params["vlength_CalcEnergyForElems_0"] = [32 * i for i in range(1, 33)]
 tune_params["tile_CalcEnergyForElems_0"] = [2**i for i in range(0, 8)]
+metrics.clear()
 metrics["GB/s"] = lambda p: (6 * real_bytes * arguments.length / 10**9) / (
     p["time"] / 10**3
 )
@@ -98,9 +111,6 @@ tuning_results["CalcEnergyForElems_0"] = tune_kernel(
 
 # InitStressTermsForElems
 print("Tuning InitStressTermsForElems")
-user_preprocessor += [
-    f"#define numElem {arguments.elems}\n",
-]
 code = generate_directive_function(
     preprocessor + user_preprocessor,
     signatures["InitStressTermsForElems"],
@@ -118,6 +128,7 @@ args = [p, q, sigxx, sigyy, sigzz]
 tune_params.clear()
 tune_params["vlength_InitStressTermsForElems"] = [32 * i for i in range(1, 33)]
 tune_params["tile_InitStressTermsForElems"] = [2**i for i in range(0, 8)]
+metrics.clear()
 metrics["GB/s"] = lambda p: (5 * real_bytes * arguments.elems / 10**9) / (
     p["time"] / 10**3
 )
@@ -134,11 +145,87 @@ tuning_results["InitStressTermsForElems"] = tune_kernel(
     metrics=metrics,
 )
 
+# CalcLagrangeElements
+print("Tuning CalcLagrangeElements")
+code = generate_directive_function(
+    preprocessor + user_preprocessor,
+    signatures["CalcLagrangeElements"],
+    functions["CalcLagrangeElements"],
+    app,
+    data=data["CalcLagrangeElements"],
+)
+vdov = np.zeros(arguments.elems).astype(real_type)
+dxx = np.random.rand(arguments.elems).astype(real_type)
+dyy = np.random.rand(arguments.elems).astype(real_type)
+dzz = np.random.rand(arguments.elems).astype(real_type)
+vnew = np.random.rand(arguments.elems).astype(real_type)
+args = [vdov, dxx, dyy, dzz, vnew]
+
+tune_params.clear()
+tune_params["vlength_CalcLagrangeElements"] = [32 * i for i in range(1, 33)]
+tune_params["tile_CalcLagrangeElements"] = [2**i for i in range(0, 8)]
+metrics.clear()
+metrics["GB/s"] = lambda p: (10 * real_bytes * arguments.elems / 10**9) / (
+    p["time"] / 10**3
+)
+metrics["GFLOPS/s"] = lambda p: (6 * arguments.elems / 10**9) / (p["time"] / 10**3)
+
+tuning_results["CalcLagrangeElements"] = tune_kernel(
+    "CalcLagrangeElements",
+    code,
+    0,
+    args,
+    tune_params,
+    compiler_options=compiler_options,
+    compiler="nvc++",
+    metrics=metrics,
+)
+
+# CalcPressureForElems
+print("Tuning CalcPressureForElems")
+code = generate_directive_function(
+    preprocessor + user_preprocessor,
+    signatures["CalcPressureForElems"],
+    functions["CalcPressureForElems"],
+    app,
+    data=data["CalcPressureForElems"],
+)
+regelemlist = np.random.randint(0, arguments.elems, size=arguments.length).astype(
+    np.int32
+)
+compression = np.random.rand(arguments.length).astype(real_type)
+pbvc = np.zeros(arguments.length).astype(real_type)
+p_new = np.zeros(arguments.length).astype(real_type)
+bvc = np.zeros(arguments.length).astype(real_type)
+e_old = np.random.rand(arguments.length).astype(real_type)
+vnewc = np.random.rand(arguments.elems).astype(real_type)
+args = [regelemlist, compression, pbvc, p_new, bvc, e_old, vnewc]
+
+tune_params.clear()
+tune_params["vlength_CalcPressureForElems"] = [32 * i for i in range(1, 33)]
+tune_params["tile_CalcPressureForElems"] = [2**i for i in range(0, 8)]
+metrics.clear()
+metrics["GB/s"] = lambda p: (10 * real_bytes * arguments.length / 10**9) / (
+    p["time"] / 10**3
+)
+metrics["GFLOPS/s"] = lambda p: (4 * arguments.length / 10**9) / (p["time"] / 10**3)
+
+tuning_results["CalcPressureForElems"] = tune_kernel(
+    "CalcPressureForElems",
+    code,
+    0,
+    args,
+    tune_params,
+    compiler_options=compiler_options,
+    compiler="nvc++",
+    metrics=metrics,
+)
+
+# Nodes kernels
+print("Tuning node kernels")
+
 # CalcForceForNodes
 print("Tuning CalcForceForNodes")
-user_preprocessor += [
-    f"#define numNode {arguments.nodes}\n",
-]
 code = generate_directive_function(
     preprocessor + user_preprocessor,
     signatures["CalcForceForNodes"],
@@ -207,7 +294,6 @@ tuning_results["CalcAccelerationForNodes"] = tune_kernel(
     metrics=metrics,
 )
 
-
 # CalcPositionForNodes
 print("Tuning CalcPositionForNodes")
 user_preprocessor += ["#define dt Real_t(0.4325)\n"]
@@ -245,41 +331,6 @@ tuning_results["CalcPositionForNodes"] = tune_kernel(
     metrics=metrics,
 )
 
-# CalcLagrangeElements
-print("Tuning CalcLagrangeElements")
-code = generate_directive_function(
-    preprocessor + user_preprocessor,
-    signatures["CalcLagrangeElements"],
-    functions["CalcLagrangeElements"],
-    app,
-    data=data["CalcLagrangeElements"],
-)
-vdov = np.zeros(arguments.elems).astype(real_type)
-dxx = np.random.rand(arguments.elems).astype(real_type)
-dyy = np.random.rand(arguments.elems).astype(real_type)
-dzz = np.random.rand(arguments.elems).astype(real_type)
-vnew = np.random.rand(arguments.elems).astype(real_type)
-args = [vdov, dxx, dyy, dzz, vnew]
-
-tune_params.clear()
-tune_params["vlength_CalcLagrangeElements"] = [32 * i for i in range(1, 33)]
-tune_params["tile_CalcLagrangeElements"] = [2**i for i in range(0, 8)]
-metrics["GB/s"] = lambda p: (10 * real_bytes * arguments.elems / 10**9) / (
-    p["time"] / 10**3
-)
-metrics["GFLOPS/s"] = lambda p: (6 * arguments.elems / 10**9) / (p["time"] / 10**3)
-
-tuning_results["CalcLagrangeElements"] = tune_kernel(
-    "CalcLagrangeElements",
-    code,
-    0,
-    args,
-    tune_params,
-    compiler_options=compiler_options,
-    compiler="nvc++",
-    metrics=metrics,
-)
-
 # CalcVelocityForNodes
 print("Tuning CalcVelocityForNodes")
 code = generate_directive_function(
@@ -307,43 +358,6 @@ metrics["GFLOPS/s"] = lambda p: (6 * arguments.nodes / 10**9) / (p["time"] / 10*
 
 tuning_results["CalcVelocityForNodes"] = tune_kernel(
     "CalcVelocityForNodes",
-    code,
-    0,
-    args,
-    tune_params,
-    compiler_options=compiler_options,
-    compiler="nvc++",
-    metrics=metrics,
-)
-
-# CalcPressureForElems
-print("Tuning CalcPressureForElems")
-code = generate_directive_function(
-    preprocessor + user_preprocessor,
-    signatures["CalcPressureForElems"],
-    functions["CalcPressureForElems"],
-    app,
-    data=data["CalcPressureForElems"],
-    )
-regelemlist = np.random.randint(0, arguments.elems, size=arguments.length).astype(np.int32)
-compression = np.random.rand(arguments.length).astype(real_type)
-pbvc = np.zeros(arguments.length).astype(real_type)
-p_new = np.zeros(arguments.length).astype(real_type)
-bvc = np.zeros(arguments.length).astype(real_type)
-e_old = np.random.rand(arguments.length).astype(real_type)
-vnewc = np.random.rand(arguments.elems).astype(real_type)
-args = [regelemlist, compression, pbvc, p_new, bvc, e_old, vnewc]
-
-tune_params.clear()
-tune_params["vlength_CalcPressureForElems"] = [32 * i for i in range(1, 33)]
-tune_params["tile_CalcPressureForElems"] = [2**i for i in range(0, 8)]
-metrics["GB/s"] = lambda p: (10 * real_bytes * arguments.length / 10**9) / (
-        p["time"] / 10**3
-)
-metrics["GFLOPS/s"] = lambda p: (4 * arguments.length / 10**9) / (p["time"] / 10**3)
-
-tuning_results["CalcPressureForElems"] = tune_kernel(
-    "CalcPressureForElems",
     code,
     0,
     args,
