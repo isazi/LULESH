@@ -1686,12 +1686,24 @@ void CalcVelocityForNodes(Real_t *xd,  Real_t *yd,  Real_t *zd,
                           const Real_t dt, const Real_t u_cut,
                           Index_t numNode)
 {
-#pragma acc parallel loop present(xd[:numNode], \
-                                  yd[:numNode], \
-                                  zd[:numNode], \
-                                  xdd[:numNode], \
-                                  ydd[:numNode], \
-                                  zdd[:numNode])
+#pragma tuner start CalcVelocityForNodes xd(Real_t*:numNode) yd(Real_t*:numNode) zd(Real_t*:numNode) xdd(Real_t*:numNode) ydd(Real_t*:numNode) zdd(Real_t*:numNode)
+#ifdef kernel_tuner
+  #pragma acc parallel vector_length(vlength_CalcVelocityForNodes) present(xd[:numNode], \
+                                 yd[:numNode], \
+                                 zd[:numNode], \
+                                 xdd[:numNode], \
+                                 ydd[:numNode], \
+                                 zdd[:numNode])
+  #pragma acc loop tile(tile_CalcVelocityForNodes)
+#else
+  #pragma acc parallel present(xd[:numNode], \
+                               yd[:numNode], \
+                               zd[:numNode], \
+                               xdd[:numNode], \
+                               ydd[:numNode], \
+                               zdd[:numNode])
+  #pragma acc loop
+#endif
   for ( Index_t i = 0 ; i < numNode ; ++i )
   {
     Real_t xdtmp, ydtmp, zdtmp ;
@@ -1708,6 +1720,7 @@ void CalcVelocityForNodes(Real_t *xd,  Real_t *yd,  Real_t *zd,
     if( fabs(zdtmp) < u_cut ) zdtmp = Real_t(0.0);
     zd[i] = zdtmp ;
   }
+#pragma tuner stop
 }
 
 /******************************************/

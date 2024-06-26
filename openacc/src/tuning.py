@@ -47,7 +47,7 @@ if arguments.float:
     real_type = np.float32
     real_bytes = 4
 # preprocessor
-user_preprocessor = ["#define emin Real_t(-1.0e+15)\n"]
+user_preprocessor = ["#define emin Real_t(-1.0e+15)\n", "#define u_cut Real_t(1.0e-7)"]
 
 # extracting tunable code
 app = Code(OpenACC(), Cxx())
@@ -255,19 +255,19 @@ code = generate_directive_function(
     data=data["CalcLagrangeElements"],
 )
 vdov = np.zeros(arguments.elems).astype(real_type)
-dxx = np.random.rand(arguments.nodes).astype(real_type)
-dyy = np.random.rand(arguments.nodes).astype(real_type)
-dzz = np.random.rand(arguments.nodes).astype(real_type)
-vnew = np.random.rand(arguments.nodes).astype(real_type)
+dxx = np.random.rand(arguments.elems).astype(real_type)
+dyy = np.random.rand(arguments.elems).astype(real_type)
+dzz = np.random.rand(arguments.elems).astype(real_type)
+vnew = np.random.rand(arguments.elems).astype(real_type)
 args = [vdov, dxx, dyy, dzz, vnew]
 
 tune_params.clear()
 tune_params["vlength_CalcLagrangeElements"] = [32 * i for i in range(1, 33)]
 tune_params["tile_CalcLagrangeElements"] = [2**i for i in range(0, 8)]
-metrics["GB/s"] = lambda p: (10 * real_bytes * arguments.nodes / 10**9) / (
+metrics["GB/s"] = lambda p: (10 * real_bytes * arguments.elems / 10**9) / (
     p["time"] / 10**3
 )
-metrics["GFLOPS/s"] = lambda p: (6 * arguments.nodes / 10**9) / (p["time"] / 10**3)
+metrics["GFLOPS/s"] = lambda p: (6 * arguments.elems / 10**9) / (p["time"] / 10**3)
 
 tuning_results["CalcLagrangeElements"] = tune_kernel(
     "CalcLagrangeElements",
@@ -280,6 +280,43 @@ tuning_results["CalcLagrangeElements"] = tune_kernel(
     metrics=metrics,
 )
 
+# CalcVelocityForNodes
+print("Tuning CalcVelocityForNodes")
+code = generate_directive_function(
+    preprocessor + user_preprocessor,
+    signatures["CalcVelocityForNodes"],
+    functions["CalcVelocityForNodes"],
+    app,
+    data=data["CalcVelocityForNodes"],
+)
+xd = np.random.rand(arguments.nodes).astype(real_type)
+yd = np.random.rand(arguments.nodes).astype(real_type)
+zd = np.random.rand(arguments.nodes).astype(real_type)
+xdd = np.random.rand(arguments.nodes).astype(real_type)
+ydd = np.random.rand(arguments.nodes).astype(real_type)
+zdd = np.random.rand(arguments.nodes).astype(real_type)
+args = [xd, yd, zd, xdd, ydd, zdd]
+
+tune_params.clear()
+tune_params["vlength_CalcVelocityForNodes"] = [32 * i for i in range(1, 33)]
+tune_params["tile_CalcVelocityForNodes"] = [2**i for i in range(0, 8)]
+metrics["GB/s"] = lambda p: (9 * real_bytes * arguments.nodes / 10**9) / (
+    p["time"] / 10**3
+)
+metrics["GFLOPS/s"] = lambda p: (6 * arguments.nodes / 10**9) / (p["time"] / 10**3)
+
+tuning_results["CalcVelocityForNodes"] = tune_kernel(
+    "CalcVelocityForNodes",
+    code,
+    0,
+    args,
+    tune_params,
+    compiler_options=compiler_options,
+    compiler="nvc++",
+    metrics=metrics,
+)
+
+# save results on disk
 if arguments.save:
     with open("tuning_results.json", "w") as file:
         json.dump(tuning_results, file)
