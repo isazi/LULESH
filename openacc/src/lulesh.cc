@@ -303,13 +303,14 @@ void InitStressTermsForElems(Real_t *p, Real_t *q,
    //
 #pragma tuner start InitStressTermsForElems p(Real_t*:numElem) q(Real_t*:numElem) sigxx(Real_t*:numElem) sigyy(Real_t*:numElem) sigzz(Real_t*:numElem)
 #ifdef kernel_tuner
-  #pragma acc parallel vector_length(vlength) present(p[:numElem], q[:numElem], \
+  #pragma acc parallel vector_length(vlength_InitStressTermsForElems) present(p[:numElem], q[:numElem], \
                                   sigxx,sigyy,sigzz)
+  #pragma acc loop tile(tile_InitStressTermsForElems)
 #else
   #pragma acc parallel present(p[:numElem], q[:numElem], \
                                   sigxx,sigyy,sigzz)
-#endif
   #pragma acc loop
+#endif
   for (Index_t i = 0 ; i < numElem ; ++i){
     sigxx[i] = sigyy[i] = sigzz[i] =  - p[i] - q[i] ;
   }
@@ -1553,15 +1554,16 @@ static inline void CalcForceForNodes(Domain& domain)
 
 #pragma tuner start CalcForceForNodes fx(Real_t*:numNode) fy(Real_t*:numNode) fz(Real_t*:numNode)
 #ifdef kernel_tuner
-  #pragma acc parallel vector_length(vlength) present(fx[:numNode], \
+  #pragma acc parallel vector_length(vlength_CalcForceForNodes) present(fx[:numNode], \
     fy[:numNode], \
     fz[:numNode])
+  #pragma acc loop tile(tile_CalcForceForNodes)
 #else
   #pragma acc parallel present(fx[:numNode], \
                                fy[:numNode], \
                                fz[:numNode])
-#endif
   #pragma acc loop
+#endif
   for (Index_t i=0; i<numNode; ++i) {
     fx[i] = Real_t(0.0);
     fy[i] = Real_t(0.0);

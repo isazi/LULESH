@@ -113,6 +113,9 @@ sigyy = np.zeros(arguments.elems).astype(real_type)
 sigzz = np.zeros(arguments.elems).astype(real_type)
 args = [p, q, sigxx, sigyy, sigzz]
 
+tune_params.clear()
+tune_params["vlength_InitStressTermsForElems"] = [32 * i for i in range(1, 33)]
+tune_params["tile_InitStressTermsForElems"] = [2**i for i in range(0, 8)]
 metrics["GB/s"] = lambda p: (5 * real_bytes * arguments.elems / 10**9) / (
     p["time"] / 10**3
 )
@@ -146,6 +149,9 @@ fy = np.random.rand(arguments.nodes).astype(real_type)
 fz = np.random.rand(arguments.nodes).astype(real_type)
 args = [fx, fy, fz]
 
+tune_params.clear()
+tune_params["vlength_CalcForceForNodes"] = [32 * i for i in range(1, 33)]
+tune_params["tile_CalcForceForNodes"] = [2**i for i in range(0, 8)]
 metrics.clear()
 metrics["GB/s"] = lambda p: (3 * real_bytes * arguments.nodes / 10**9) / (
     p["time"] / 10**3
