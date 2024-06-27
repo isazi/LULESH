@@ -27,13 +27,13 @@ def command_line() -> argparse.Namespace:
 arguments = command_line()
 
 # load source code
-with open("lulesh.cc") as file:
+with open("../src/lulesh.cc") as file:
     source = file.read()
 # LULESH compiler options
 compiler_options = [
     "-acc=gpu",
     "-gpu=cc86,fma,unroll",
-    "-I.",
+    "-I../src",
     "-mp",
     "-lm",
     "-O2",
